@@ -1,74 +1,94 @@
+<div align="center">
+
 # Tiny LLM API
 
-**GPT-Neo 125M** behind **FastAPI**, fully **offline** at runtime: model files live on disk, no Hugging Face calls when `HF_HUB_OFFLINE=1`. Default port **22122**. Full detail: **`documentation.html`**.
+**Local [GPT-Neo 125M](https://huggingface.co/EleutherAI/gpt-neo-125M) · [FastAPI](https://fastapi.tiangolo.com/) · offline inference**
 
----
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 
-### Hardware (sanity check)
+Port **`22122`** · [Full documentation →](documentation.html)
 
-| | Minimum | Comfortable |
-|---|--------|-------------|
-| **CPU** | x86_64, 2+ cores | **4+ cores** (CPU inference; default image has no GPU) |
+<br/>
+
+</div>
+
+## Overview
+
+Serve a tiny causal LM from **files on disk** — no Hugging Face Hub at runtime when `HF_HUB_OFFLINE=1`.  
+**Inference only** (no training). Dataset files can be listed/read via the API.
+
+## Requirements
+
+| | Minimum | Recommended |
+|:--|:--|:--|
+| **CPU** | x86_64, 2+ cores | **4+** (default image is CPU; no GPU required) |
 | **RAM** | 8 GB | **16 GB** |
-| **Disk** | ~10 GB free | **~15 GB+** (image + PyTorch + ~0.5–1 GB model) |
+| **Disk** | ~10 GB free | **~15 GB+** (Docker + PyTorch + model) |
 
-Below that: OOM, failed builds, or very slow text generation. This stack **infers** only — it does **not** train.
+## Layout
 
----
+```
+models/gpt-neo-125m/   ← full HF snapshot (populate via script below)
+data/                  ← optional .txt .md .jsonl .csv
+app/main.py            ← API
+```
 
-### What goes where
+## Quick start
 
-| Path | Purpose |
-|------|---------|
-| `models/gpt-neo-125m/` | Full HF snapshot (you download once — see below) |
-| `data/` | Your `.txt` / `.md` / `.jsonl` / `.csv` (optional; exposed via API) |
+1. **Model** — On a machine with internet (repo root):
 
----
+   ```bash
+   pip install huggingface_hub && python scripts/download_model.py
+   ```
 
-### Quick start
+   Or: `huggingface-cli download EleutherAI/gpt-neo-125M --local-dir models/gpt-neo-125m`
 
-1. **Download model** (any machine with internet), repo root:
+2. **Docker** — `docker compose up --build -d` → API at `http://<host>:22122`  
+   *First build needs network for dependencies unless you load a pre-built image.*
 
-   `pip install huggingface_hub && python scripts/download_model.py`  
-   or: `huggingface-cli download EleutherAI/gpt-neo-125M --local-dir models/gpt-neo-125m`
+3. **Without Docker** — Install CPU PyTorch, `pip install -r requirements.txt`, set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`, then run `uvicorn app.main:app --host 0.0.0.0 --port 22122`.
 
-2. **Run:** `docker compose up --build -d` → API at `http://<host>:22122`  
-   (First build needs network for `pip` unless you use a pre-built image.)
+## Endpoints
 
-3. **Optional — no Docker:** install CPU PyTorch + `pip install -r requirements.txt`, set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`, then `uvicorn app.main:app --host 0.0.0.0 --port 22122`.
-
----
-
-### API (short)
-
-| Method | Path | Role |
-|--------|------|------|
-| GET | `/health` | Model path, offline flag, threads, `data_dir` |
-| POST | `/v1/generate` | Body: `prompt`, optional `max_new_tokens`, `temperature`, `top_p`, `do_sample` |
+| Method | Path | Description |
+|:--|:--|:--|
+| GET | `/health` | Status, model path, offline flag, threads, `data_dir` |
+| POST | `/v1/generate` | `prompt`; optional `max_new_tokens`, `temperature`, `top_p`, `do_sample` |
 | GET | `/v1/dataset/files` | List files in `data/` |
-| GET | `/v1/dataset/file?name=…` | Read one file (size capped) |
+| GET | `/v1/dataset/file?name=` | Read one file (size capped) |
 
-Live OpenAPI: `/docs`, `/redoc`, `/openapi.json`.
+Interactive: **`/docs`** · **`/redoc`** · **`/openapi.json`**
 
 ```bash
-curl -s http://localhost:22122/v1/generate -H "Content-Type: application/json" \
+curl -s http://localhost:22122/v1/generate \
+  -H "Content-Type: application/json" \
   -d '{"prompt":"Hello","max_new_tokens":64}'
 ```
 
----
+## Environment (Docker defaults)
 
-### Env vars (Docker defaults)
+| Variable | Value |
+|:--|:--|
+| `MODEL_PATH` | `/models/gpt-neo-125m` |
+| `DATA_DIR` | `/data` |
+| `HF_HUB_OFFLINE` | `1` |
+| `TRANSFORMERS_OFFLINE` | `1` |
+| `TORCH_NUM_THREADS` | `4` |
+| `MAX_PROMPT_CHARS` | `6000` |
+| `MAX_DATA_READ_BYTES` | `2097152` |
 
-`MODEL_PATH=/models/gpt-neo-125m` · `DATA_DIR=/data` · `HF_HUB_OFFLINE=1` · `TRANSFORMERS_OFFLINE=1` · `TORCH_NUM_THREADS=4` · `MAX_PROMPT_CHARS=6000` · `MAX_DATA_READ_BYTES=2097152`
+Volumes: `./models` → `/models`, `./data` → `/data` (read-only). Limits in `docker-compose.yml` — adjust for your host.
 
-Compose also maps `./models` and `./data` read-only and sets CPU/RAM limits — tune in `docker-compose.yml`.
+## Troubleshooting
 
----
+| Issue | What to check |
+|:--|:--|
+| Container exits | `models/gpt-neo-125m` exists with `config.json`, tokenizer, weights (`.safetensors` or `.bin`) |
+| Hub access at runtime | `HF_HUB_OFFLINE=1` and a complete local model folder |
+| Slow replies | Expected on CPU; reduce `max_new_tokens` |
 
-### Troubleshooting
+## License
 
-- **Won’t start:** `models/gpt-neo-125m` must exist with `config.json`, tokenizer, and weights (`.safetensors` or `.bin`).
-- **Hub download at runtime:** Keep `HF_HUB_OFFLINE=1` and a complete local folder.
-- **Slow:** Normal on CPU; lower `max_new_tokens`.
-
-**License:** [EleutherAI/gpt-neo-125M](https://huggingface.co/EleutherAI/gpt-neo-125M) — use per their model card; this repo is a thin wrapper.
+Weights and terms: **[EleutherAI/gpt-neo-125M](https://huggingface.co/EleutherAI/gpt-neo-125M)** — follow their model card. This repository is a thin integration layer.
