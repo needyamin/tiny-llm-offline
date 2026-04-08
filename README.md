@@ -85,6 +85,7 @@ Volumes: `./models` → `/models`, `./data` → `/data` (read-only). Limits in `
 
 | Issue | What to check |
 |:--|:--|
+| **`docker build` TLS timeout pulling base** | Network/CDN to Docker Hub. **Retry** later. Default image is **AWS Public ECR** (`PYTHON_IMAGE` in `Dockerfile`). To force Docker Hub: `docker compose build --build-arg PYTHON_IMAGE=python:3.11-slim` (or fix DNS/VPN/firewall). |
 | Container exits | `models/gpt-neo-125m` exists with `config.json`, tokenizer, weights (`.safetensors` or `.bin`) |
 | Hub access at runtime | `HF_HUB_OFFLINE=1` and a complete local model folder |
 | Slow replies | Expected on CPU; reduce `max_new_tokens` |
