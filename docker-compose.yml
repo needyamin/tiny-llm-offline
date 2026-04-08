@@ -1,0 +1,23 @@
+# Offline-ready: mount local model + dataset; HF_HUB_OFFLINE=1 at runtime (no Hub calls).
+services:
+  tinyllm:
+    build: .
+    ports:
+      - "22122:22122"
+    environment:
+      - MODEL_PATH=/models/gpt-neo-125m
+      - DATA_DIR=/data
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      - TORCH_NUM_THREADS=4
+      - TORCH_INTEROP_THREADS=1
+      - OMP_NUM_THREADS=4
+      - MKL_NUM_THREADS=4
+      - MAX_PROMPT_CHARS=6000
+    volumes:
+      - ./models:/models:ro
+      - ./data:/data:ro
+    shm_size: 512mb
+    restart: unless-stopped
+    cpus: 4.0
+    mem_limit: 12g

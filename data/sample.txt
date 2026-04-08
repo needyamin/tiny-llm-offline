@@ -1,0 +1,2 @@
+Place your offline text dataset files here (.txt, .md, .jsonl, .csv).
+The API lists them at GET /v1/dataset/files and reads one via GET /v1/dataset/file?name=sample.txt

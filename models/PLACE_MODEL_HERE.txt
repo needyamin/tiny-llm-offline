@@ -1,0 +1,4 @@
+1) On a PC with internet: pip install huggingface_hub && python scripts/download_model.py
+   This creates models/gpt-neo-125m/ with config, tokenizer, and weights.
+2) Copy this whole models/gpt-neo-125m folder to the offline machine (USB/rsync).
+3) docker compose up --build
