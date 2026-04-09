@@ -16,6 +16,7 @@ COPY scripts/download_model.py ./scripts/download_model.py
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
+COPY static ./static
 COPY app ./app
 
 ENV MODEL_PATH=/models/gpt-neo-125m \

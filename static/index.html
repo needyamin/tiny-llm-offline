@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tiny LLM Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #log { height: min(60vh, 480px); overflow-y: auto; background: #f8f9fa; }
+    .msg-user { background: #0d6efd; color: #fff; border-radius: 12px; padding: .5rem .75rem; max-width: 92%; margin-left: auto; }
+    .msg-bot { background: #e9ecef; color: #212529; border-radius: 12px; padding: .5rem .75rem; max-width: 92%; }
+    .msg-meta { font-size: .75rem; color: #6c757d; }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-4" style="max-width: 720px;">
+    <h1 class="h4 mb-1">Tiny LLM Chat</h1>
+    <p class="text-muted small mb-3">GPT-Neo 125M · same origin as API (<code>/v1/generate</code>)</p>
+
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="small fw-semibold">Conversation</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClear">Clear</button>
+      </div>
+      <div class="card-body p-3" id="log"></div>
+      <div class="card-footer">
+        <form id="f" class="row g-2 align-items-end">
+          <div class="col-12">
+            <label class="form-label small mb-0">Your message</label>
+            <textarea class="form-control" id="input" rows="2" placeholder="Type here…" required></textarea>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label small mb-0">Max tokens</label>
+            <input type="number" class="form-control form-control-sm" id="maxTok" value="96" min="1" max="256">
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label small mb-0">Temperature</label>
+            <input type="number" class="form-control form-control-sm" id="temp" value="0.8" min="0.1" max="2" step="0.1">
+          </div>
+          <div class="col-12 col-md-6 text-md-end">
+            <button type="submit" class="btn btn-primary" id="btnSend">Send</button>
+          </div>
+        </form>
+        <p class="text-danger small mt-2 mb-0 d-none" id="err"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+(function () {
+  const log = document.getElementById('log');
+  const input = document.getElementById('input');
+  const err = document.getElementById('err');
+  const btnSend = document.getElementById('btnSend');
+  const f = document.getElementById('f');
+  const messages = [];
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function appendBubble(role, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'mb-2 d-flex ' + (role === 'user' ? 'justify-content-end' : 'justify-content-start');
+    const inner = document.createElement('div');
+    inner.className = role === 'user' ? 'msg-user' : 'msg-bot';
+    inner.innerHTML = '<div class="msg-meta mb-1">' + (role === 'user' ? 'You' : 'Model') + '</div><div class="text-break">' + esc(text).replace(/\n/g, '<br>') + '</div>';
+    wrap.appendChild(inner);
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function buildPrompt() {
+    const lines = messages.map(function (m) {
+      return (m.role === 'user' ? 'User' : 'Assistant') + ': ' + m.text;
+    });
+    return lines.join('\n') + '\nAssistant:';
+  }
+
+  document.getElementById('btnClear').addEventListener('click', function () {
+    messages.length = 0;
+    log.innerHTML = '';
+    err.classList.add('d-none');
+  });
+
+  f.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    err.classList.add('d-none');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    messages.push({ role: 'user', text: text });
+    appendBubble('user', text);
+
+    const prompt = buildPrompt();
+    btnSend.disabled = true;
+    btnSend.textContent = '…';
+
+    try {
+      const res = await fetch('/v1/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompt,
+          max_new_tokens: Math.min(256, Math.max(1, parseInt(document.getElementById('maxTok').value, 10) || 96)),
+          temperature: parseFloat(document.getElementById('temp').value) || 0.8,
+          do_sample: true
+        })
+      });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        throw new Error(data.detail ? JSON.stringify(data.detail) : (data.message || res.statusText));
+      }
+      let full = data.text || '';
+      let reply = full.startsWith(prompt) ? full.slice(prompt.length).trim() : full.trim();
+      messages.push({ role: 'assistant', text: reply });
+      appendBubble('assistant', reply || '(empty)');
+    } catch (x) {
+      err.textContent = String(x.message || x);
+      err.classList.remove('d-none');
+      messages.pop();
+      if (log.lastChild) log.removeChild(log.lastChild);
+    } finally {
+      btnSend.disabled = false;
+      btnSend.textContent = 'Send';
+    }
+  });
+})();
+  </script>
+</body>
+</html>

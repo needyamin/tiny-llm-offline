@@ -59,7 +59,7 @@ If a previous build failed with **no space left on device**, run `docker builder
 | GET | `/v1/dataset/files` | List files in `data/` |
 | GET | `/v1/dataset/file?name=` | Read one file (size capped) |
 
-Interactive: **`/docs`** · **`/redoc`** · **`/openapi.json`**
+Chat UI: **`/`** (Bootstrap) · API docs: **`/docs`** · **`/redoc`** · **`/openapi.json`**
 
 ```bash
 curl -s http://localhost:22122/v1/generate \

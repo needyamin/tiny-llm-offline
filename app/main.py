@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 import torch
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from transformers import pipeline
 
@@ -31,6 +32,8 @@ if _offline_mode():
 def _project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
+
+STATIC_DIR = _project_root() / "static"
 
 # Local model folder (full snapshot: config, tokenizer, weights)
 MODEL_PATH = os.getenv("MODEL_PATH") or str(_project_root() / "models" / "gpt-neo-125m")
@@ -65,6 +68,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Tiny LLM API (offline-ready)", lifespan=lifespan)
+
+
+@app.get("/")
+def chat_page():
+    index = STATIC_DIR / "index.html"
+    if not index.is_file():
+        raise HTTPException(404, "static/index.html missing")
+    return FileResponse(index)
 
 
 class GenerateRequest(BaseModel):
