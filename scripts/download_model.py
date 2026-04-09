@@ -13,11 +13,7 @@ REPO = os.getenv("MODEL_REPO", "EleutherAI/gpt-neo-125M")
 def main():
     os.makedirs(os.path.dirname(OUT) or ".", exist_ok=True)
     print(f"Downloading {REPO} -> {OUT}")
-    snapshot_download(
-        REPO,
-        local_dir=OUT,
-        local_dir_use_symlinks=False,
-    )
+    snapshot_download(REPO, local_dir=OUT)
     print("Done. Copy the folder to your offline machine under models/gpt-neo-125m")
 
 

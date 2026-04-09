@@ -1,5 +1,5 @@
-# Model is baked in at docker build (no host models/ folder required).
-# Build needs internet once to download GPT-Neo 125M into the image.
+# Model downloads on first container start into volume tinyllm_model (not during docker build).
+# First start: internet + enough free disk on Docker storage (~2 GB for model + cache).
 services:
   tinyllm:
     build: .
@@ -16,8 +16,12 @@ services:
       - MKL_NUM_THREADS=4
       - MAX_PROMPT_CHARS=6000
     volumes:
+      - tinyllm_model:/models
       - ./data:/data:ro
     shm_size: 512mb
     restart: unless-stopped
     cpus: 4.0
     mem_limit: 12g
+
+volumes:
+  tinyllm_model:

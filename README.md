@@ -16,7 +16,7 @@ Port **`22122`** · [Full documentation →](documentation.html)
 
 ## Overview
 
-Serve a tiny causal LM from **weights in the Docker image** (or a local folder if you run without Docker). No Hugging Face Hub at **runtime** when `HF_HUB_OFFLINE=1`.  
+Serve a tiny causal LM from **weights on a Docker volume** (or a local folder without Docker). After the first download, no Hugging Face Hub at **runtime** when `HF_HUB_OFFLINE=1`.  
 **Inference only** (no training). Dataset files can be listed/read via the API.
 
 ## Requirements
@@ -30,24 +30,25 @@ Serve a tiny causal LM from **weights in the Docker image** (or a local folder i
 ## Layout
 
 ```
-Docker image: /models/gpt-neo-125m  ← baked in at docker build
-./data/              ← optional dataset (mounted into container)
-app/main.py          ← API
+Docker volume → /models/gpt-neo-125m  ← filled on first container start
+./data/             ← optional dataset (bind mount)
+app/main.py         ← API
 ```
 
-## Quick start (Docker — model inside image)
+## Quick start (Docker)
 
-1. **Build & run** (needs **internet during `docker compose build`** to download GPT-Neo 125M into the image):
+1. **Build & run** — Image build is **small** (no model in the Dockerfile). The model is downloaded **on first container start** into a Docker volume (`tinyllm_model` → `/models`). You need **internet on first start** and **~2 GB free** where Docker stores data (often `/var/lib/docker`).
 
    ```bash
    docker compose up --build -d
+   docker compose logs -f   # first start downloads the model; then uvicorn serves
    ```
 
-   API: `http://<host>:22122` — no host `models/` folder required.
+2. **Dataset (optional)** — Files in `./data/` (mounted at `/data`).
 
-2. **Dataset (optional)** — Put files under `./data/` (mounted read-only at `/data`).
+3. **Without Docker** — `python scripts/download_model.py` → `models/gpt-neo-125m`, then `uvicorn` as before.
 
-3. **Run without Docker** — Download the model to `models/gpt-neo-125m` (see `scripts/download_model.py`), install CPU PyTorch + `pip install -r requirements.txt`, set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`, then `uvicorn app.main:app --host 0.0.0.0 --port 22122`.
+If a previous build failed with **no space left on device**, run `docker builder prune` / `docker system prune` to free space, then rebuild.
 
 ## Endpoints
 
@@ -78,15 +79,15 @@ curl -s http://localhost:22122/v1/generate \
 | `MAX_PROMPT_CHARS` | `6000` |
 | `MAX_DATA_READ_BYTES` | `2097152` |
 
-Volume: `./data` → `/data` (read-only). Model lives **inside the image** at `/models/gpt-neo-125m`. Tune CPU/RAM in `docker-compose.yml`.
+Volumes: `tinyllm_model` → `/models` (model files), `./data` → `/data` (read-only). Tune CPU/RAM in `docker-compose.yml`.
 
 ## Troubleshooting
 
 | Issue | What to check |
 |:--|:--|
 | **`docker build` TLS timeout pulling base** | Network/CDN. **Retry** later. Default base: **AWS Public ECR** (`PYTHON_IMAGE` in `Dockerfile`). To use Docker Hub: `docker compose build --build-arg PYTHON_IMAGE=python:3.11-slim`. |
-| **Build fails downloading model** | Build must reach **Hugging Face** to bake in weights. Retry or fix proxy/firewall. |
-| Container exits (old setup) | If you mounted an **empty** `./models` over the image, remove that mount — current compose only mounts `./data`. |
+| **No space during build** | Model is **not** in the Dockerfile anymore; free disk / run `docker system prune`. First download happens at **container start**, not build. |
+| **First start slow / errors** | Needs **internet** until `config.json` exists under the volume; check `docker logs`. |
 | Hub at runtime | Default: `HF_HUB_OFFLINE=1` — model is already in the image; no Hub download when running. |
 | Slow replies | Expected on CPU; reduce `max_new_tokens` |
 

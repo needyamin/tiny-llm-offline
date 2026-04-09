@@ -1,3 +1,2 @@
-Docker: the image downloads GPT-Neo 125M during "docker compose build" (no host models/ needed).
-Without Docker: pip install huggingface_hub && python scripts/download_model.py
-  to create models/gpt-neo-125m/ locally.
+Docker: model is stored in volume tinyllm_model (downloaded on first container start).
+Without Docker: run scripts/download_model.py for ./models/gpt-neo-125m

@@ -13,7 +13,8 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
     && pip install --no-cache-dir -r requirements.txt
 
 COPY scripts/download_model.py ./scripts/download_model.py
-RUN mkdir -p /models && MODEL_OUT=/models/gpt-neo-125m python scripts/download_model.py
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 COPY app ./app
 
@@ -29,4 +30,5 @@ ENV MODEL_PATH=/models/gpt-neo-125m \
     MAX_PROMPT_CHARS=6000
 EXPOSE 22122
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "22122"]
