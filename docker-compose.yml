@@ -1,4 +1,5 @@
-# Offline-ready: mount local model + dataset; HF_HUB_OFFLINE=1 at runtime (no Hub calls).
+# Model is baked in at docker build (no host models/ folder required).
+# Build needs internet once to download GPT-Neo 125M into the image.
 services:
   tinyllm:
     build: .
@@ -15,7 +16,6 @@ services:
       - MKL_NUM_THREADS=4
       - MAX_PROMPT_CHARS=6000
     volumes:
-      - ./models:/models:ro
       - ./data:/data:ro
     shm_size: 512mb
     restart: unless-stopped

@@ -12,6 +12,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
+COPY scripts/download_model.py ./scripts/download_model.py
+RUN mkdir -p /models && MODEL_OUT=/models/gpt-neo-125m python scripts/download_model.py
+
 COPY app ./app
 
 ENV MODEL_PATH=/models/gpt-neo-125m \
