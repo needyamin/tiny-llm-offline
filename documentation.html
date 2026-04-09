@@ -220,7 +220,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 22122</pre>
       <tr><td><code>DATA_DIR</code></td><td><code>/data</code></td><td>Dataset directory.</td></tr>
       <tr><td><code>HF_HUB_OFFLINE</code></td><td><code>1</code></td><td>Block Hub when true.</td></tr>
       <tr><td><code>TRANSFORMERS_OFFLINE</code></td><td><code>1</code></td><td>Offline mode for Transformers.</td></tr>
-      <tr><td><code>TORCH_NUM_THREADS</code></td><td><code>4</code></td><td>CPU compute threads.</td></tr>
+      <tr><td><code>TORCH_NUM_THREADS</code></td><td><code>2</code></td><td>CPU compute threads.</td></tr>
       <tr><td><code>TORCH_INTEROP_THREADS</code></td><td><code>1</code></td><td>Inter-op threads.</td></tr>
       <tr><td><code>MAX_PROMPT_CHARS</code></td><td><code>6000</code></td><td>Max prompt length.</td></tr>
       <tr><td><code>MAX_DATA_READ_BYTES</code></td><td><code>2097152</code></td><td>Max file size for dataset read API.</td></tr>
@@ -246,7 +246,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 22122</pre>
         <tr><td><code>model_path</code></td><td>string</td><td>Directory passed to Transformers (host path or container <code>/models/…</code>).</td></tr>
         <tr><td><code>offline</code></td><td>boolean</td><td><code>true</code> if <code>HF_HUB_OFFLINE</code> is <code>1</code> / <code>true</code> / <code>yes</code>.</td></tr>
         <tr><td><code>cuda</code></td><td>boolean</td><td><code>true</code> if PyTorch sees a CUDA device (default image is CPU-only).</td></tr>
-        <tr><td><code>cpu_threads</code></td><td>integer</td><td><code>TORCH_NUM_THREADS</code> (default 4).</td></tr>
+        <tr><td><code>cpu_threads</code></td><td>integer</td><td><code>TORCH_NUM_THREADS</code> (default 2).</td></tr>
         <tr><td><code>interop_threads</code></td><td>integer</td><td><code>TORCH_INTEROP_THREADS</code> (default 1).</td></tr>
         <tr><td><code>data_dir</code></td><td>string</td><td>Resolved dataset directory (<code>DATA_DIR</code>).</td></tr>
       </table>
@@ -257,7 +257,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 22122</pre>
   "model_path": "/models/gpt-neo-125m",
   "offline": true,
   "cuda": false,
-  "cpu_threads": 4,
+  "cpu_threads": 2,
   "interop_threads": 1,
   "data_dir": "/data"
 }</pre>
@@ -345,7 +345,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 22122</pre>
 
   <section class="section section-tone-dk" id="docker-resources">
     <h2>Docker Compose (resources)</h2>
-    <p>Example limits: <code>cpus: 4</code>, <code>mem_limit: 12g</code>, <code>shm_size: 512mb</code>. Adjust for your machine.</p>
+    <p>Example limits: <code>cpus: 2</code>, <code>mem_limit: 8g</code>, <code>shm_size: 512mb</code>. Adjust for your machine.</p>
   </section>
 
   <section class="section section-tone-tr" id="troubleshooting">

@@ -2,7 +2,7 @@
 
 # Tiny LLM API
 
-**[Qwen2.5-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct) (chat) · [FastAPI](https://fastapi.tiangolo.com/) · offline after download**
+**[Qwen2.5-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct) (chat) · [FastAPI](https://fastapi.tiangolo.com/) · offline after download**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -24,8 +24,8 @@ Serve a tiny causal LM from **weights on a Docker volume** (or a local folder wi
 | | Minimum | Recommended |
 |:--|:--|:--|
 | **CPU** | x86_64, 2+ cores | **4+** (default image is CPU; no GPU required) |
-| **RAM** | 8 GB | **16 GB** |
-| **Disk** | ~14 GB free | **~22 GB+** (Docker + PyTorch + ~3B model) |
+| **RAM** | 8 GB | **12 GB** |
+| **Disk** | ~12 GB free | **~20 GB+** (Docker + PyTorch + ~1.5B model) |
 
 ## Layout
 
@@ -37,14 +37,14 @@ app/main.py         ← API
 
 ## Quick start (Docker)
 
-1. **Build & run** — The model is downloaded **on first container start** into a Docker volume (`tinyllm_model` → `/models/model`). **Internet on first start** and **~8 GB free** for weights (more for cache). **16 GB RAM** host recommended for **3B** on CPU (weights load in float16).
+1. **Build & run** — The model is downloaded **on first container start** into a Docker volume (`tinyllm_model` → `/models/model`). **Internet on first start** and **~6 GB free** for weights (more for cache). **8–12 GB RAM** host is enough for **1.5B** on CPU (weights load in float16).
 
    ```bash
    docker compose up --build -d
    docker compose logs -f   # first start downloads; then uvicorn serves
    ```
 
-   To use a **smaller** model, set e.g. `MODEL_REPO=Qwen/Qwen2.5-1.5B-Instruct` or [0.5B](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) in `docker-compose.yml` and use a fresh volume or new `MODEL_PATH`.
+   To use a **larger** model, set e.g. `MODEL_REPO=Qwen/Qwen2.5-3B-Instruct` and raise `mem_limit` in `docker-compose.yml`; use a fresh volume. For **smaller**, use [0.5B](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct).
 
 2. **Dataset (optional)** — Files in `./data/` (mounted at `/data`).
 
@@ -77,7 +77,7 @@ curl -s http://localhost:22122/v1/generate \
 | `DATA_DIR` | `/data` |
 | `HF_HUB_OFFLINE` | `1` |
 | `TRANSFORMERS_OFFLINE` | `1` |
-| `TORCH_NUM_THREADS` | `4` |
+| `TORCH_NUM_THREADS` | `2` |
 | `MAX_PROMPT_CHARS` | `6000` |
 | `MAX_DATA_READ_BYTES` | `2097152` |
 

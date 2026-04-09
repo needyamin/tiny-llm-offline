@@ -1,1 +1,1 @@
-Docker: default Qwen2.5-3B-Instruct → MODEL_PATH /models/model. Set MODEL_REPO in compose to use another HF model.
+Docker: default Qwen2.5-1.5B-Instruct → MODEL_PATH /models/model. Set MODEL_REPO in compose to use another HF model.

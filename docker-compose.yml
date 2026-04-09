@@ -1,4 +1,4 @@
-# Default: Qwen2.5-3B-Instruct (~6–8 GB on disk). First start downloads.
+# Default: Qwen2.5-1.5B-Instruct (~4–6 GB on disk). First start downloads.
 services:
   tinyllm:
     build: .
@@ -6,22 +6,22 @@ services:
       - "22122:22122"
     environment:
       - MODEL_PATH=/models/model
-      - MODEL_REPO=Qwen/Qwen2.5-3B-Instruct
+      - MODEL_REPO=Qwen/Qwen2.5-1.5B-Instruct
       - DATA_DIR=/data
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
-      - TORCH_NUM_THREADS=4
+      - TORCH_NUM_THREADS=2
       - TORCH_INTEROP_THREADS=1
-      - OMP_NUM_THREADS=4
-      - MKL_NUM_THREADS=4
+      - OMP_NUM_THREADS=2
+      - MKL_NUM_THREADS=2
       - MAX_PROMPT_CHARS=6000
     volumes:
       - tinyllm_model:/models
       - ./data:/data:ro
     shm_size: 512mb
     restart: unless-stopped
-    cpus: 4.0
-    mem_limit: 14g
+    cpus: 2.0
+    mem_limit: 8g
 
 volumes:
   tinyllm_model:

@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import List, Literal
 
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-os.environ.setdefault("OMP_NUM_THREADS", os.getenv("TORCH_NUM_THREADS", "4"))
-os.environ.setdefault("MKL_NUM_THREADS", os.getenv("TORCH_NUM_THREADS", "4"))
+os.environ.setdefault("OMP_NUM_THREADS", os.getenv("TORCH_NUM_THREADS", "2"))
+os.environ.setdefault("MKL_NUM_THREADS", os.getenv("TORCH_NUM_THREADS", "2"))
 
 from contextlib import asynccontextmanager
 
@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-THREADS = int(os.getenv("TORCH_NUM_THREADS", "4"))
+THREADS = int(os.getenv("TORCH_NUM_THREADS", "2"))
 INTEROP = int(os.getenv("TORCH_INTEROP_THREADS", "1"))
 torch.set_num_threads(THREADS)
 torch.set_num_interop_threads(INTEROP)
@@ -37,7 +37,7 @@ def _project_root() -> Path:
 STATIC_DIR = _project_root() / "static"
 
 MODEL_PATH = os.getenv("MODEL_PATH") or str(_project_root() / "models" / "model")
-MODEL_REPO = os.getenv("MODEL_REPO", "Qwen/Qwen2.5-3B-Instruct")
+MODEL_REPO = os.getenv("MODEL_REPO", "Qwen/Qwen2.5-1.5B-Instruct")
 DATA_DIR = Path(os.getenv("DATA_DIR") or str(_project_root() / "data")).resolve()
 MAX_PROMPT_CHARS = int(os.getenv("MAX_PROMPT_CHARS", "6000"))
 MAX_DATA_READ = int(os.getenv("MAX_DATA_READ_BYTES", str(2 * 1024 * 1024)))
@@ -53,7 +53,7 @@ def _load_pretrained_kw():
     if torch.cuda.is_available():
         dt = torch.bfloat16
     else:
-        dt = torch.float16  # 3B on CPU: half precision to fit RAM
+        dt = torch.float16  # CPU: half precision, lower RAM
     kw = {"torch_dtype": dt}
     if _offline_mode():
         kw["local_files_only"] = True

@@ -6,27 +6,24 @@
   <title>Code assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #1e1e1e; color: #d4d4d4; }
+    body { background: #fff; color: #222; }
     .shell { max-width: 640px; margin: 0 auto; padding: 1rem; }
-    .title { font-size: 1.1rem; font-weight: 600; color: #fff; }
-    .sub { font-size: 0.8rem; color: #888; }
+    .title { font-size: 1.1rem; font-weight: 600; }
+    .sub { font-size: 0.8rem; color: #555; }
     #log {
       height: min(58vh, 420px);
       overflow-y: auto;
-      background: #252526;
-      border: 1px solid #333;
-      border-radius: 8px;
+      background: #fafafa;
+      border: 1px solid #ccc;
       padding: 0.75rem;
       margin-bottom: 0.75rem;
     }
-    .msg-user { background: #094771; color: #e0e0e0; border-radius: 8px; padding: 0.45rem 0.65rem; max-width: 95%; margin-left: auto; font-size: 0.9rem; }
-    .msg-bot { background: #2d2d2d; color: #d4d4d4; border-radius: 8px; padding: 0.45rem 0.65rem; max-width: 95%; font-size: 0.85rem; }
+    .msg-user { background: #e8e8e8; color: #222; padding: 0.45rem 0.65rem; max-width: 95%; margin-left: auto; font-size: 0.9rem; border: 1px solid #bbb; }
+    .msg-bot { background: #fff; color: #222; padding: 0.45rem 0.65rem; max-width: 95%; font-size: 0.85rem; border: 1px solid #ccc; }
     .msg-bot .body { white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Consolas, monospace; }
-    .msg-meta { font-size: 0.7rem; color: #888; margin-bottom: 0.2rem; }
-    #loadingRow { color: #858585; font-size: 0.85rem; }
-    textarea, input { background: #3c3c3c !important; border-color: #555 !important; color: #e0e0e0 !important; }
-    .form-control:focus { box-shadow: none; border-color: #007acc !important; }
-    details summary { cursor: pointer; color: #aaa; font-size: 0.8rem; }
+    .msg-meta { font-size: 0.7rem; color: #666; margin-bottom: 0.2rem; }
+    #loadingRow { color: #555; font-size: 0.85rem; }
+    details summary { cursor: pointer; font-size: 0.8rem; color: #444; }
     details { margin-bottom: 0.5rem; }
   </style>
 </head>
@@ -37,7 +34,7 @@
         <div class="title">Code assistant</div>
         <div class="sub">PHP · Python · JavaScript · Java · local model</div>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-secondary py-0" id="btnClear">Clear</button>
+      <button type="button" class="btn btn-sm btn-outline-dark py-0" id="btnClear">Clear</button>
     </div>
 
     <details>
@@ -99,7 +96,7 @@ Always:
     loadingEl = document.createElement('div');
     loadingEl.id = 'loadingRow';
     loadingEl.className = 'd-flex align-items-center gap-2 py-2';
-    loadingEl.innerHTML = '<div class="spinner-border spinner-border-sm text-info" role="status" aria-hidden="true"></div><span>Waiting for server…</span>';
+    loadingEl.innerHTML = '<div class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true"></div><span>Waiting for server…</span>';
     log.appendChild(loadingEl);
     log.scrollTop = log.scrollHeight;
   }
