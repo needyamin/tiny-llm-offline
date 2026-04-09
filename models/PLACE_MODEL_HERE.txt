@@ -1,2 +1,1 @@
-Docker: model is stored in volume tinyllm_model (downloaded on first container start).
-Without Docker: run scripts/download_model.py for ./models/gpt-neo-125m
+Docker: default Qwen2.5-1.5B-Instruct → MODEL_PATH /models/model. Set MODEL_REPO in compose to use another HF model.

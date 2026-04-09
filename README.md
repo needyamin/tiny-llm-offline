@@ -2,7 +2,7 @@
 
 # Tiny LLM API
 
-**Local [GPT-Neo 125M](https://huggingface.co/EleutherAI/gpt-neo-125M) · [FastAPI](https://fastapi.tiangolo.com/) · offline inference**
+**[Qwen2.5-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct) (chat) · [FastAPI](https://fastapi.tiangolo.com/) · offline after download**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -25,7 +25,7 @@ Serve a tiny causal LM from **weights on a Docker volume** (or a local folder wi
 |:--|:--|:--|
 | **CPU** | x86_64, 2+ cores | **4+** (default image is CPU; no GPU required) |
 | **RAM** | 8 GB | **16 GB** |
-| **Disk** | ~10 GB free | **~15 GB+** (Docker + PyTorch + model) |
+| **Disk** | ~12 GB free | **~20 GB+** (Docker + PyTorch + ~1.5B model) |
 
 ## Layout
 
@@ -37,12 +37,14 @@ app/main.py         ← API
 
 ## Quick start (Docker)
 
-1. **Build & run** — Image build is **small** (no model in the Dockerfile). The model is downloaded **on first container start** into a Docker volume (`tinyllm_model` → `/models`). You need **internet on first start** and **~2 GB free** where Docker stores data (often `/var/lib/docker`).
+1. **Build & run** — The model is downloaded **on first container start** into a Docker volume (`tinyllm_model` → `/models/model`). **Internet on first start** and **~6 GB free** for weights (more for cache). **16 GB RAM** host recommended for **1.5B** on CPU.
 
    ```bash
    docker compose up --build -d
-   docker compose logs -f   # first start downloads the model; then uvicorn serves
+   docker compose logs -f   # first start downloads; then uvicorn serves
    ```
+
+   To use the **smaller** [0.5B](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) instead, set `MODEL_REPO=Qwen/Qwen2.5-0.5B-Instruct` in `docker-compose.yml` and use a fresh volume or new `MODEL_PATH`.
 
 2. **Dataset (optional)** — Files in `./data/` (mounted at `/data`).
 
@@ -59,7 +61,7 @@ If a previous build failed with **no space left on device**, run `docker builder
 | GET | `/v1/dataset/files` | List files in `data/` |
 | GET | `/v1/dataset/file?name=` | Read one file (size capped) |
 
-Chat UI: **`/`** (Bootstrap) · API docs: **`/docs`** · **`/redoc`** · **`/openapi.json`**
+Chat UI: **`/`** · Chat API: **`POST /v1/chat/completions`** · Docs: **`/docs`**
 
 ```bash
 curl -s http://localhost:22122/v1/generate \

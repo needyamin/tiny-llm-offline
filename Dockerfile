@@ -19,7 +19,8 @@ RUN chmod +x /docker-entrypoint.sh
 COPY static ./static
 COPY app ./app
 
-ENV MODEL_PATH=/models/gpt-neo-125m \
+ENV MODEL_PATH=/models/model \
+    MODEL_REPO=Qwen/Qwen2.5-1.5B-Instruct \
     DATA_DIR=/data \
     HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \

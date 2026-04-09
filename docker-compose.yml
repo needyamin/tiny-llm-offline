@@ -1,12 +1,12 @@
-# Model downloads on first container start into volume tinyllm_model (not during docker build).
-# First start: internet + enough free disk on Docker storage (~2 GB for model + cache).
+# Default: Qwen2.5-1.5B-Instruct (better chat quality than 0.5B; ~4–6 GB on disk). First start downloads.
 services:
   tinyllm:
     build: .
     ports:
       - "22122:22122"
     environment:
-      - MODEL_PATH=/models/gpt-neo-125m
+      - MODEL_PATH=/models/model
+      - MODEL_REPO=Qwen/Qwen2.5-1.5B-Instruct
       - DATA_DIR=/data
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1

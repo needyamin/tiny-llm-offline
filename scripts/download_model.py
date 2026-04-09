@@ -6,9 +6,9 @@ import time
 
 from huggingface_hub import snapshot_download
 
-OUT = os.getenv("MODEL_OUT", os.path.join(os.path.dirname(__file__), "..", "models", "gpt-neo-125m"))
+OUT = os.getenv("MODEL_OUT", os.path.join(os.path.dirname(__file__), "..", "models", "model"))
 OUT = os.path.abspath(OUT)
-REPO = os.getenv("MODEL_REPO", "EleutherAI/gpt-neo-125M")
+REPO = os.getenv("MODEL_REPO", "Qwen/Qwen2.5-1.5B-Instruct")
 RETRIES = int(os.getenv("HF_DOWNLOAD_RETRIES", "5"))
 DELAY = int(os.getenv("HF_DOWNLOAD_DELAY_SEC", "15"))
 
