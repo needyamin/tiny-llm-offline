@@ -20,7 +20,7 @@ COPY static ./static
 COPY app ./app
 
 ENV MODEL_PATH=/models/model \
-    MODEL_REPO=Qwen/Qwen2.5-1.5B-Instruct \
+    MODEL_REPO=Qwen/Qwen2.5-3B-Instruct \
     DATA_DIR=/data \
     HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \

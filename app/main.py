@@ -37,7 +37,7 @@ def _project_root() -> Path:
 STATIC_DIR = _project_root() / "static"
 
 MODEL_PATH = os.getenv("MODEL_PATH") or str(_project_root() / "models" / "model")
-MODEL_REPO = os.getenv("MODEL_REPO", "Qwen/Qwen2.5-1.5B-Instruct")
+MODEL_REPO = os.getenv("MODEL_REPO", "Qwen/Qwen2.5-3B-Instruct")
 DATA_DIR = Path(os.getenv("DATA_DIR") or str(_project_root() / "data")).resolve()
 MAX_PROMPT_CHARS = int(os.getenv("MAX_PROMPT_CHARS", "6000"))
 MAX_DATA_READ = int(os.getenv("MAX_DATA_READ_BYTES", str(2 * 1024 * 1024)))
@@ -50,7 +50,11 @@ _device = None
 
 
 def _load_pretrained_kw():
-    kw = {"torch_dtype": torch.float32}
+    if torch.cuda.is_available():
+        dt = torch.bfloat16
+    else:
+        dt = torch.float16  # 3B on CPU: half precision to fit RAM
+    kw = {"torch_dtype": dt}
     if _offline_mode():
         kw["local_files_only"] = True
     return kw
