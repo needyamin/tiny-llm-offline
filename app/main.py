@@ -50,16 +50,16 @@ async def lifespan(app: FastAPI):
     if not mp.is_dir():
         raise RuntimeError(f"MODEL_PATH is not a directory: {mp}")
     device = 0 if torch.cuda.is_available() else -1
-    kwargs = dict(
+    # Do not pass local_files_only in model_kwargs/tokenizer_kwargs — newer Transformers merges
+    # them with pipeline defaults and raises "multiple values for local_files_only".
+    # HF_HUB_OFFLINE / TRANSFORMERS_OFFLINE already block Hub when offline.
+    pipe = pipeline(
+        "text-generation",
         model=str(mp),
         tokenizer=str(mp),
         device=device,
         torch_dtype=torch.float32,
     )
-    if _offline_mode():
-        kwargs["model_kwargs"] = {"local_files_only": True}
-        kwargs["tokenizer_kwargs"] = {"local_files_only": True}
-    pipe = pipeline("text-generation", **kwargs)
     yield
     pipe = None
 
