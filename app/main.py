@@ -81,9 +81,11 @@ def chat_page():
 class GenerateRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=MAX_PROMPT_CHARS)
     max_new_tokens: int = Field(96, ge=1, le=256)
-    temperature: float = Field(0.8, ge=0.1, le=2.0)
-    top_p: float = Field(0.95, ge=0.0, le=1.0)
+    temperature: float = Field(0.85, ge=0.1, le=2.0)
+    top_p: float = Field(0.92, ge=0.0, le=1.0)
     do_sample: bool = True
+    repetition_penalty: float = Field(1.18, ge=1.0, le=2.0)
+    no_repeat_ngram_size: int = Field(3, ge=0, le=10)
 
 
 class GenerateResponse(BaseModel):
@@ -108,14 +110,17 @@ def health():
 def generate(body: GenerateRequest):
     if pipe is None:
         raise HTTPException(503, "Model not loaded")
-    out = pipe(
-        body.prompt,
+    gen_kw = dict(
         max_new_tokens=body.max_new_tokens,
         temperature=body.temperature,
         top_p=body.top_p,
         do_sample=body.do_sample,
+        repetition_penalty=body.repetition_penalty,
         pad_token_id=pipe.tokenizer.eos_token_id,
     )
+    if body.no_repeat_ngram_size > 0:
+        gen_kw["no_repeat_ngram_size"] = body.no_repeat_ngram_size
+    out = pipe(body.prompt, **gen_kw)
     text = out[0].get("generated_text", "")
     return GenerateResponse(text=text, model=MODEL_PATH)
 

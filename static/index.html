@@ -9,13 +9,23 @@
     #log { height: min(60vh, 480px); overflow-y: auto; background: #f8f9fa; }
     .msg-user { background: #0d6efd; color: #fff; border-radius: 12px; padding: .5rem .75rem; max-width: 92%; margin-left: auto; }
     .msg-bot { background: #e9ecef; color: #212529; border-radius: 12px; padding: .5rem .75rem; max-width: 92%; }
+    .msg-bot .body { white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Consolas, system-ui, sans-serif; font-size: 0.9rem; }
     .msg-meta { font-size: .75rem; color: #6c757d; }
   </style>
 </head>
 <body class="bg-light">
   <div class="container py-4" style="max-width: 720px;">
     <h1 class="h4 mb-1">Tiny LLM Chat</h1>
-    <p class="text-muted small mb-3">GPT-Neo 125M · same origin as API (<code>/v1/generate</code>)</p>
+    <p class="text-muted small mb-2">GPT-Neo 125M (small base model — follows prompts <em>partially</em>; instructions below help.)</p>
+
+    <details class="mb-3 small" open>
+      <summary class="fw-semibold">Behavior instructions (sent with every reply)</summary>
+      <label class="form-label mt-2 mb-1 text-muted">Tell the model how to answer: code, language, tone, stay on topic.</label>
+      <textarea class="form-control form-control-sm" id="instr" rows="5">Follow the user’s latest message closely.
+If they ask for programming code, answer with working code first (use ``` language fences), then a one-line note if needed.
+If they ask a question, answer directly with relevant terms—no unrelated stories.
+Stay on topic. Be concise.</textarea>
+    </details>
 
     <div class="card shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -35,7 +45,11 @@
           </div>
           <div class="col-6 col-md-3">
             <label class="form-label small mb-0">Temperature</label>
-            <input type="number" class="form-control form-control-sm" id="temp" value="0.8" min="0.1" max="2" step="0.1">
+            <input type="number" class="form-control form-control-sm" id="temp" value="0.85" min="0.1" max="2" step="0.1">
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label small mb-0">Repeat penalty</label>
+            <input type="number" class="form-control form-control-sm" id="rep" value="1.18" min="1" max="2" step="0.02" title="Higher = less repeating the same line">
           </div>
           <div class="col-12 col-md-6 text-md-end">
             <button type="submit" class="btn btn-primary" id="btnSend">Send</button>
@@ -67,7 +81,18 @@
     wrap.className = 'mb-2 d-flex ' + (role === 'user' ? 'justify-content-end' : 'justify-content-start');
     const inner = document.createElement('div');
     inner.className = role === 'user' ? 'msg-user' : 'msg-bot';
-    inner.innerHTML = '<div class="msg-meta mb-1">' + (role === 'user' ? 'You' : 'Model') + '</div><div class="text-break">' + esc(text).replace(/\n/g, '<br>') + '</div>';
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta mb-1';
+    meta.textContent = role === 'user' ? 'You' : 'Model';
+    const body = document.createElement('div');
+    body.className = role === 'user' ? 'text-break' : 'body';
+    if (role === 'user') {
+      body.innerHTML = esc(text).replace(/\n/g, '<br>');
+    } else {
+      body.textContent = text;
+    }
+    inner.appendChild(meta);
+    inner.appendChild(body);
     wrap.appendChild(inner);
     log.appendChild(wrap);
     log.scrollTop = log.scrollHeight;
@@ -77,7 +102,10 @@
     const lines = messages.map(function (m) {
       return (m.role === 'user' ? 'User' : 'Assistant') + ': ' + m.text;
     });
-    return lines.join('\n') + '\nAssistant:';
+    const tail = lines.join('\n') + '\nAssistant:';
+    const instr = (document.getElementById('instr') && document.getElementById('instr').value || '').trim();
+    if (!instr) return tail;
+    return '### Instructions\n' + instr + '\n\n### Conversation\n' + tail;
   }
 
   document.getElementById('btnClear').addEventListener('click', function () {
@@ -106,7 +134,10 @@
         body: JSON.stringify({
           prompt: prompt,
           max_new_tokens: Math.min(256, Math.max(1, parseInt(document.getElementById('maxTok').value, 10) || 96)),
-          temperature: parseFloat(document.getElementById('temp').value) || 0.8,
+          temperature: parseFloat(document.getElementById('temp').value) || 0.85,
+          repetition_penalty: parseFloat(document.getElementById('rep').value) || 1.18,
+          no_repeat_ngram_size: 3,
+          top_p: 0.92,
           do_sample: true
         })
       });
@@ -115,7 +146,13 @@
         throw new Error(data.detail ? JSON.stringify(data.detail) : (data.message || res.statusText));
       }
       let full = data.text || '';
-      let reply = full.startsWith(prompt) ? full.slice(prompt.length).trim() : full.trim();
+      let reply = '';
+      if (full.startsWith(prompt)) {
+        reply = full.slice(prompt.length).trim();
+      } else {
+        var ix = full.lastIndexOf('Assistant:');
+        reply = ix >= 0 ? full.slice(ix + 10).trim() : full.trim();
+      }
       messages.push({ role: 'assistant', text: reply });
       appendBubble('assistant', reply || '(empty)');
     } catch (x) {
